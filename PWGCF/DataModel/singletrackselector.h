@@ -13,13 +13,11 @@
 /// \author Sofia Tomassini
 /// \since 30 May 2023
 
-
 #ifndef COMMON_DATAMODEL_SINGLETRACKSELECTOR_H_
 #define COMMON_DATAMODEL_SINGLETRACKSELECTOR_H_
 
 #include "Framework/ASoA.h"
 #include "Framework/AnalysisDataModel.h"
-
 
 namespace o2::aod
 {
