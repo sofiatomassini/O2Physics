@@ -13,13 +13,11 @@
 /// \author Sofia Tomassini
 /// \since 30 May 2023
 
-
-#ifndef COMMON_DATAMODEL_SINGLETRACKSELECTOR_H_
-#define COMMON_DATAMODEL_SINGLETRACKSELECTOR_H_
+#ifndef PWGCF_DATAMODEL_SINGLETRACKSELECTOR_H_
+#define PWGCF_DATAMODEL_SINGLETRACKSELECTOR_H_
 
 #include "Framework/ASoA.h"
 #include "Framework/AnalysisDataModel.h"
-
 
 namespace o2::aod
 {
@@ -38,4 +36,4 @@ DECLARE_SOA_TABLE(SingleTrackSel, "AOD", "STSEL", // Table of the delta TOF data
                   singletrackselector::Py,
                   singletrackselector::Pz);
 } // namespace o2::aod
-#endif
+#endif // PWGCF_DATAMODEL_SINGLETRACKSELECTOR_H_
