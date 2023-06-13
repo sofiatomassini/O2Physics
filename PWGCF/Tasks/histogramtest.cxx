@@ -142,6 +142,15 @@ struct EtaPhiHistograms {
       registry.add("px", "px", kTH1F, {{100, 0., 5., "px"}});
       registry.add("py", "py", kTH1F, {{100, 0., 5., "py"}});
       registry.add("pz", "pz", kTH1F, {{100, 0., 5., "pz"}});
+      registry.add("p", "p", kTH1F, {{100, 0., 5., "p"}});
+      registry.add("pt", "pt", kTH1F, {{100, 0., 5., "pt"}});
+      registry.add("dcaxy_to_p", "dcaxy_to_p", kTH2F, {{100, 0., 5.0, "p"}, {100, -0.2, 0.2, "dcaxy"}});
+      registry.add("dcaxy_to_pt", "dcaxy_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaxy"}});
+      registry.add("dcaz_to_p", "dcaz_to_p", kTH2F, {{100, 0., 5., "p"}, {100, -2., 2., "dcaz"}});
+      registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaz"}});
+      registry.add("crossed_rows", "crossed_rows", kTH1F, {{160, -0.5, 159.5, "Ncrossedrows"}});
+      registry.add("nsigmaTOF", "nsigmaTOF", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
+      registry.add("nsigmaTPC", "nsigmaTPC", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
     }
   } //
 
@@ -272,6 +281,15 @@ struct EtaPhiHistograms {
       registry.fill(HIST("px"), track.px());
       registry.fill(HIST("py"), track.py());
       registry.fill(HIST("pz"), track.pz());
+      registry.fill(HIST("p"), track.p());
+      registry.fill(HIST("pt"), track.pt());
+      registry.fill(HIST("dcaxy_to_p"), track.p(), track.dcaXY());
+      registry.fill(HIST("dcaxy_to_pt"), track.pt(), track.dcaXY());
+      registry.fill(HIST("dcaz_to_p"), track.p(), track.dcaZ());
+      registry.fill(HIST("dcaz_to_pt"), track.pt(), track.dcaZ());
+      registry.fill(HIST("crossed_rows"), track.tpcNClsCrossedRows());
+      registry.fill(HIST("nsigmaTOF"), track.pt(), track.tofNSigmaPr());
+      registry.fill(HIST("nsigmaTPC"), track.pt(), track.tpcNSigmaPr());
     }
   }
   PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);

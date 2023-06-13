@@ -27,14 +27,15 @@ using namespace o2;
 using namespace o2::framework;
 using namespace o2::framework::expressions;
 using namespace o2::track;
-using namespace o2::aod::singletrackselector; // the namespace defined in .h
+using namespace o2::aod;
+//::singletrackselector; // the namespace defined in .h
 
 struct singleTrackSelector {
 
   Configurable<int> applyEvSel{"applyEvSel", 2, "Flag to apply rapidity cut: 0 -> no event selection, 1 -> Run 2 event selection, 2 -> Run 3 event selection"};
   // Configurable<int> trackSelection{"trackSelection", 1, "Track selection: 0 -> No Cut, 1 -> kGlobalTrack, 2 -> kGlobalTrackWoPtEta, 3 -> kGlobalTrackWoDCA, 4 -> kQualityTracks, 5 -> kInAcceptanceTracks"};
 
-  using Trks = soa::Join<aod::Tracks, aod::TracksExtra, aod::pidEvTimeFlags,
+  using Trks = soa::Join<aod::Tracks, aod::TracksExtra, aod::pidEvTimeFlags, aod::TracksDCA,
                          aod::pidTPCFullEl, aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr,
                          aod::pidTOFFullEl, aod::pidTOFFullMu, aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr,
                          aod::TrackSelection>;
@@ -56,7 +57,15 @@ struct singleTrackSelector {
       tableRow(track.collisionId(),
                track.px(),
                track.py(),
-               track.pz());
+               track.pz(),
+               track.p(),
+               track.pt(),
+               track.dcaXY(),
+               track.dcaZ(),
+               // track.tpcNClsCrossedRows(),
+               singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
+               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),
+               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaPr()));
     }
   }
 };
