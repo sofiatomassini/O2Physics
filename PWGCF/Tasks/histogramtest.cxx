@@ -44,6 +44,7 @@ struct EtaPhiHistograms {
 
   void init(o2::framework::InitContext&)
   {
+    /*
     if (doprocessStandard == true) {
       registry.add("eta", "eta", kTH1F, {{102, -2.01, 2.01, "eta"}});                                      //
       registry.add("phi", "phi", kTH1F, {{100, 0., 2. * M_PI, "phi"}});                                    //
@@ -138,143 +139,144 @@ struct EtaPhiHistograms {
       registry.add("TOFSignalK_stdcut", "TOFSignalK_stdcut", kTH2F, {{1000, 0., 5.0}, {200, 0., 200.}});
       registry.add("TOFSignald_stdcut", "TOFSignald_stdcut", kTH2F, {{1000, 0., 5.0}, {200, 0., 200.}});
     }
-    if (doprocessSelected == true) {
-      registry.add("px", "px", kTH1F, {{100, 0., 5., "px"}});
-      registry.add("py", "py", kTH1F, {{100, 0., 5., "py"}});
-      registry.add("pz", "pz", kTH1F, {{100, 0., 5., "pz"}});
-      registry.add("p", "p", kTH1F, {{100, 0., 5., "p"}});
-      registry.add("pt", "pt", kTH1F, {{100, 0., 5., "pt"}});
-      registry.add("dcaxy_to_p", "dcaxy_to_p", kTH2F, {{100, 0., 5.0, "p"}, {100, -0.2, 0.2, "dcaxy"}});
-      registry.add("dcaxy_to_pt", "dcaxy_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaxy"}});
-      registry.add("dcaz_to_p", "dcaz_to_p", kTH2F, {{100, 0., 5., "p"}, {100, -2., 2., "dcaz"}});
-      registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaz"}});
-      registry.add("crossed_rows", "crossed_rows", kTH1F, {{160, -0.5, 159.5, "Ncrossedrows"}});
-      registry.add("nsigmaTOF", "nsigmaTOF", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
-      registry.add("nsigmaTPC", "nsigmaTPC", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
-    }
-  } //
-
-  void processStandard(allinfo const& tracks)
-  {
-    for (auto& track : tracks) {
-      registry.fill(HIST("eta"), track.eta());
-      registry.fill(HIST("phi"), track.phi());
-      registry.fill(HIST("pt"), track.pt());
-      registry.fill(HIST("dEdxTPC"), track.pt(), track.tpcSignal());
-      registry.fill(HIST("dEdxTPCinner"), track.tpcInnerParam(), track.tpcSignal());
-      registry.fill(HIST("NsigmaTPC"), track.pt(), track.tpcNSigmaPr()); // tpcNSigmaStorePr
-      registry.fill(HIST("TOFSignal"), track.pt(), track.beta());
-      registry.fill(HIST("NsigmaTOF_p"), track.pt(), track.tofNSigmaPr());
-      registry.fill(HIST("NsigmaTPCvsTOF"), track.tpcNSigmaPr(), track.tofNSigmaPr());
-      // registry.fill(HIST("NsigmaTPCvsTOF^2"), track.tpcNSigmaPr() * track.tpcNSigmaPr(), track.tofNSigmaPr() * track.tofNSigmaPr());
-      registry.fill(HIST("NsigmaTOF_K"), track.pt(), track.tofNSigmaKa());
-      registry.fill(HIST("NsigmaTPC_K"), track.pt(), track.tpcNSigmaKa());
-      registry.fill(HIST("DCAxy"), track.dcaXY());
-      registry.fill(HIST("DCAz"), track.dcaZ());
-      registry.fill(HIST("DCAxyvspt"), track.pt(), track.dcaXY());
-      registry.fill(HIST("DCAzvspt"), track.pt(), track.dcaZ());
-      registry.fill(HIST("hcrossedrows"), track.tpcNClsCrossedRows());
-      registry.fill(HIST("charge_pt"), track.pt(), track.sign());
-      registry.fill(HIST("charge"), track.sign());
-      registry.fill(HIST("NsigmaTOF_d"), track.pt(), track.tofNSigmaDe());
-      registry.fill(HIST("NsigmaTPC_d"), track.pt(), track.tpcNSigmaDe());
-      // registry.fill(HIST("TOF_yess"), track.pt(), track.hasTOF());
-      // registry.fill(HIST("TOFSignalK"), track.pt(), track.tofExpSignalKa());
-      registry.fill(HIST("TOFSignalpr"), track.pt(), track.tofExpSignalPr(track.tofSignal()));
-      registry.fill(HIST("TOFSignalK"), track.pt(), track.tofExpSignalKa(track.tofSignal()));
-      registry.fill(HIST("TOFSignald"), track.pt(), track.tofExpSignalDe(track.tofSignal()));
-
-      if (track.hasTPC()) {
-        registry.fill(HIST("TPC_yess"), track.pt());
-        registry.fill(HIST("TPC_yess_eta"), track.pt(), track.eta());
-        if (track.hasTOF()) {
-          registry.fill(HIST("TPCandTOF"), track.pt());
-          registry.fill(HIST("TPCandTOF_eta"), track.pt(), track.eta());
-        }
-      }
-
-      // sempre sulle tracce faccio il fill degli istogrammi dopo i cut a pt>150 MEV/c e |eta|<0.8
-      if (track.pt() > 0.15 && abs(track.eta()) < 0.8) {
-
-        registry.fill(HIST("eta_cut"), track.eta());
-        registry.fill(HIST("phi_cut"), track.phi());
-        registry.fill(HIST("pt_cut"), track.pt());
-        registry.fill(HIST("dEdxTPC_cut"), track.pt(), track.tpcSignal());
-        registry.fill(HIST("dEdxTPCinner_cut"), track.tpcInnerParam(), track.tpcSignal());
-        registry.fill(HIST("NsigmaTPC_cut"), track.pt(), track.tpcNSigmaPr()); // tpcNSigmaStorePr
-        registry.fill(HIST("TOFSignal_cut"), track.pt(), track.beta());
-        registry.fill(HIST("NsigmaTOF_p_cut"), track.pt(), track.tofNSigmaPr());
-        registry.fill(HIST("NsigmaTPCvsTOF_cut"), track.tpcNSigmaPr(), track.tofNSigmaPr());
-        // registry.fill(HIST("NsigmaTPCvsTOF^2_cut"), track.tpcNSigmaPr() * track.tpcNSigmaPr(), track.tofNSigmaPr() * track.tofNSigmaPr());
-        registry.fill(HIST("NsigmaTOF_K_cut"), track.pt(), track.tofNSigmaKa());
-        registry.fill(HIST("NsigmaTPC_K_cut"), track.pt(), track.tpcNSigmaKa());
-        registry.fill(HIST("DCAxy_cut"), track.dcaXY());
-        registry.fill(HIST("DCAz_cut"), track.dcaZ());
-        registry.fill(HIST("DCAxyvspt_cut"), track.pt(), track.dcaXY());
-        registry.fill(HIST("DCAzvspt_cut"), track.pt(), track.dcaZ());
-        registry.fill(HIST("hcrossedrows_cut"), track.tpcNClsCrossedRows());
-        registry.fill(HIST("charge_pt_cut"), track.pt(), track.sign());
-
-        registry.fill(HIST("charge_cut"), track.sign());
-        registry.fill(HIST("NsigmaTOF_d_cut"), track.pt(), track.tofNSigmaDe());
-        registry.fill(HIST("NsigmaTPC_d_cut"), track.pt(), track.tpcNSigmaDe());
-        registry.fill(HIST("TOFSignalpr_cut"), track.pt(), track.tofExpSignalPr(track.tofSignal()));
-        registry.fill(HIST("TOFSignalK_cut"), track.pt(), track.tofExpSignalKa(track.tofSignal()));
-        registry.fill(HIST("TOFSignald_cut"), track.pt(), track.tofExpSignalDe(track.tofSignal()));
-
-        if (track.hasTPC()) {
-          registry.fill(HIST("TPC_yess_cut"), track.pt());
-          registry.fill(HIST("TPC_yess_eta_cut"), track.pt(), track.eta());
-          if (track.hasTOF()) {
-            registry.fill(HIST("TPCandTOF_cut"), track.pt());
-            registry.fill(HIST("TPCandTOF_eta_cut"), track.pt(), track.eta());
-          }
-        }
-      }
-
-      /// filling histos after standard cuts
-
-      if (track.isPrimaryTrack() && (track.pt() > 0.15 && abs(track.eta()) < 0.8)) {
-        registry.fill(HIST("eta_stdcut"), track.eta());
-        registry.fill(HIST("phi_stdcut"), track.phi());
-        registry.fill(HIST("pt_stdcut"), track.pt());
-        registry.fill(HIST("dEdxTPC_stdcut"), track.pt(), track.tpcSignal());
-        registry.fill(HIST("dEdxTPCinner_stdcut"), track.tpcInnerParam(), track.tpcSignal());
-        registry.fill(HIST("NsigmaTPC_stdcut"), track.pt(), track.tpcNSigmaPr()); // tpcNSigmaStorePr
-        registry.fill(HIST("TOFSignal_stdcut"), track.pt(), track.beta());
-        registry.fill(HIST("NsigmaTOF_p_stdcut"), track.pt(), track.tofNSigmaPr());
-        registry.fill(HIST("NsigmaTPCvsTOF_stdcut"), track.tpcNSigmaPr(), track.tofNSigmaPr());
-        // registry.fill(HIST("NsigmaTPCvsTOF^2_stdcut"),track.tpcNSigmaPr() * track.tpcNSigmaPr(), track.tofNSigmaPr() * track.tofNSigmaPr());
-        registry.fill(HIST("NsigmaTOF_K_stdcut"), track.pt(), track.tofNSigmaKa());
-        registry.fill(HIST("NsigmaTPC_K_stdcut"), track.pt(), track.tpcNSigmaKa());
-        registry.fill(HIST("DCAxy_stdcut"), track.dcaXY());
-        registry.fill(HIST("DCAz_stdcut"), track.dcaZ());
-        registry.fill(HIST("DCAxyvspt_stdcut"), track.pt(), track.dcaXY());
-        registry.fill(HIST("DCAzvspt_stdcut"), track.pt(), track.dcaZ());
-        registry.fill(HIST("hcrossedrows_stdcut"), track.tpcNClsCrossedRows());
-        registry.fill(HIST("charge_pt_stdcut"), track.pt(), track.sign());
-
-        registry.fill(HIST("charge_stdcut"), track.sign());
-        registry.fill(HIST("NsigmaTOF_d_stdcut"), track.pt(), track.tofNSigmaDe());
-        registry.fill(HIST("NsigmaTPC_d_stdcut"), track.pt(), track.tpcNSigmaDe());
-        registry.fill(HIST("TOFSignalpr_stdcut"), track.pt(), track.tofExpSignalPr(track.tofSignal()));
-        registry.fill(HIST("TOFSignalK_stdcut"), track.pt(), track.tofExpSignalKa(track.tofSignal()));
-        registry.fill(HIST("TOFSignald_stdcut"), track.pt(), track.tofExpSignalDe(track.tofSignal()));
-
-        if (track.hasTPC()) {
-          registry.fill(HIST("TPC_yess_stdcut"), track.pt());
-          registry.fill(HIST("TPC_yess_eta_stdcut"), track.pt(), track.eta());
-          if (track.hasTOF()) {
-            registry.fill(HIST("TPCandTOF_stdcut"), track.pt());
-            registry.fill(HIST("TPCandTOF_eta_stdcut"), track.pt(), track.eta());
-          }
-        }
-      }
-    }
+    if (doprocessSelected == true) {*/
+    registry.add("px", "px", kTH1F, {{100, 0., 5., "px"}});
+    registry.add("py", "py", kTH1F, {{100, 0., 5., "py"}});
+    registry.add("pz", "pz", kTH1F, {{100, 0., 5., "pz"}});
+    registry.add("p", "p", kTH1F, {{100, 0., 5., "p"}});
+    registry.add("pt", "pt", kTH1F, {{100, 0., 5., "pt"}});
+    registry.add("dcaxy_to_p", "dcaxy_to_p", kTH2F, {{100, 0., 5.0, "p"}, {100, -0.2, 0.2, "dcaxy"}});
+    registry.add("dcaxy_to_pt", "dcaxy_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaxy"}});
+    registry.add("dcaz_to_p", "dcaz_to_p", kTH2F, {{100, 0., 5., "p"}, {100, -2., 2., "dcaz"}});
+    registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaz"}});
+    registry.add("crossed_rows", "crossed_rows", kTH1F, {{160, -0.5, 159.5, "Ncrossedrows"}});
+    registry.add("nsigmaTOF", "nsigmaTOF", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
+    registry.add("nsigmaTPC", "nsigmaTPC", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
   }
-  PROCESS_SWITCH(EtaPhiHistograms, processStandard, "process non filtered track", false);
+  //}
 
-  void processSelected(aod::SingleTrackSel const& tracks)
+  /*
+    void processStandard(allinfo const& tracks)
+    {
+      for (auto& track : tracks) {
+        registry.fill(HIST("eta"), track.eta());
+        registry.fill(HIST("phi"), track.phi());
+        registry.fill(HIST("pt"), track.pt());
+        registry.fill(HIST("dEdxTPC"), track.pt(), track.tpcSignal());
+        registry.fill(HIST("dEdxTPCinner"), track.tpcInnerParam(), track.tpcSignal());
+        registry.fill(HIST("NsigmaTPC"), track.pt(), track.tpcNSigmaPr()); // tpcNSigmaStorePr
+        registry.fill(HIST("TOFSignal"), track.pt(), track.beta());
+        registry.fill(HIST("NsigmaTOF_p"), track.pt(), track.tofNSigmaPr());
+        registry.fill(HIST("NsigmaTPCvsTOF"), track.tpcNSigmaPr(), track.tofNSigmaPr());
+        // registry.fill(HIST("NsigmaTPCvsTOF^2"), track.tpcNSigmaPr() * track.tpcNSigmaPr(), track.tofNSigmaPr() * track.tofNSigmaPr());
+        registry.fill(HIST("NsigmaTOF_K"), track.pt(), track.tofNSigmaKa());
+        registry.fill(HIST("NsigmaTPC_K"), track.pt(), track.tpcNSigmaKa());
+        registry.fill(HIST("DCAxy"), track.dcaXY());
+        registry.fill(HIST("DCAz"), track.dcaZ());
+        registry.fill(HIST("DCAxyvspt"), track.pt(), track.dcaXY());
+        registry.fill(HIST("DCAzvspt"), track.pt(), track.dcaZ());
+        registry.fill(HIST("hcrossedrows"), track.tpcNClsCrossedRows());
+        registry.fill(HIST("charge_pt"), track.pt(), track.sign());
+        registry.fill(HIST("charge"), track.sign());
+        registry.fill(HIST("NsigmaTOF_d"), track.pt(), track.tofNSigmaDe());
+        registry.fill(HIST("NsigmaTPC_d"), track.pt(), track.tpcNSigmaDe());
+        // registry.fill(HIST("TOF_yess"), track.pt(), track.hasTOF());
+        // registry.fill(HIST("TOFSignalK"), track.pt(), track.tofExpSignalKa());
+        registry.fill(HIST("TOFSignalpr"), track.pt(), track.tofExpSignalPr(track.tofSignal()));
+        registry.fill(HIST("TOFSignalK"), track.pt(), track.tofExpSignalKa(track.tofSignal()));
+        registry.fill(HIST("TOFSignald"), track.pt(), track.tofExpSignalDe(track.tofSignal()));
+
+        if (track.hasTPC()) {
+          registry.fill(HIST("TPC_yess"), track.pt());
+          registry.fill(HIST("TPC_yess_eta"), track.pt(), track.eta());
+          if (track.hasTOF()) {
+            registry.fill(HIST("TPCandTOF"), track.pt());
+            registry.fill(HIST("TPCandTOF_eta"), track.pt(), track.eta());
+          }
+        }
+
+        // sempre sulle tracce faccio il fill degli istogrammi dopo i cut a pt>150 MEV/c e |eta|<0.8
+        if (track.pt() > 0.15 && abs(track.eta()) < 0.8) {
+
+          registry.fill(HIST("eta_cut"), track.eta());
+          registry.fill(HIST("phi_cut"), track.phi());
+          registry.fill(HIST("pt_cut"), track.pt());
+          registry.fill(HIST("dEdxTPC_cut"), track.pt(), track.tpcSignal());
+          registry.fill(HIST("dEdxTPCinner_cut"), track.tpcInnerParam(), track.tpcSignal());
+          registry.fill(HIST("NsigmaTPC_cut"), track.pt(), track.tpcNSigmaPr()); // tpcNSigmaStorePr
+          registry.fill(HIST("TOFSignal_cut"), track.pt(), track.beta());
+          registry.fill(HIST("NsigmaTOF_p_cut"), track.pt(), track.tofNSigmaPr());
+          registry.fill(HIST("NsigmaTPCvsTOF_cut"), track.tpcNSigmaPr(), track.tofNSigmaPr());
+          // registry.fill(HIST("NsigmaTPCvsTOF^2_cut"), track.tpcNSigmaPr() * track.tpcNSigmaPr(), track.tofNSigmaPr() * track.tofNSigmaPr());
+          registry.fill(HIST("NsigmaTOF_K_cut"), track.pt(), track.tofNSigmaKa());
+          registry.fill(HIST("NsigmaTPC_K_cut"), track.pt(), track.tpcNSigmaKa());
+          registry.fill(HIST("DCAxy_cut"), track.dcaXY());
+          registry.fill(HIST("DCAz_cut"), track.dcaZ());
+          registry.fill(HIST("DCAxyvspt_cut"), track.pt(), track.dcaXY());
+          registry.fill(HIST("DCAzvspt_cut"), track.pt(), track.dcaZ());
+          registry.fill(HIST("hcrossedrows_cut"), track.tpcNClsCrossedRows());
+          registry.fill(HIST("charge_pt_cut"), track.pt(), track.sign());
+
+          registry.fill(HIST("charge_cut"), track.sign());
+          registry.fill(HIST("NsigmaTOF_d_cut"), track.pt(), track.tofNSigmaDe());
+          registry.fill(HIST("NsigmaTPC_d_cut"), track.pt(), track.tpcNSigmaDe());
+          registry.fill(HIST("TOFSignalpr_cut"), track.pt(), track.tofExpSignalPr(track.tofSignal()));
+          registry.fill(HIST("TOFSignalK_cut"), track.pt(), track.tofExpSignalKa(track.tofSignal()));
+          registry.fill(HIST("TOFSignald_cut"), track.pt(), track.tofExpSignalDe(track.tofSignal()));
+
+          if (track.hasTPC()) {
+            registry.fill(HIST("TPC_yess_cut"), track.pt());
+            registry.fill(HIST("TPC_yess_eta_cut"), track.pt(), track.eta());
+            if (track.hasTOF()) {
+              registry.fill(HIST("TPCandTOF_cut"), track.pt());
+              registry.fill(HIST("TPCandTOF_eta_cut"), track.pt(), track.eta());
+            }
+          }
+        }
+
+        /// filling histos after standard cuts
+
+        if (track.isPrimaryTrack() && (track.pt() > 0.15 && abs(track.eta()) < 0.8)) {
+          registry.fill(HIST("eta_stdcut"), track.eta());
+          registry.fill(HIST("phi_stdcut"), track.phi());
+          registry.fill(HIST("pt_stdcut"), track.pt());
+          registry.fill(HIST("dEdxTPC_stdcut"), track.pt(), track.tpcSignal());
+          registry.fill(HIST("dEdxTPCinner_stdcut"), track.tpcInnerParam(), track.tpcSignal());
+          registry.fill(HIST("NsigmaTPC_stdcut"), track.pt(), track.tpcNSigmaPr()); // tpcNSigmaStorePr
+          registry.fill(HIST("TOFSignal_stdcut"), track.pt(), track.beta());
+          registry.fill(HIST("NsigmaTOF_p_stdcut"), track.pt(), track.tofNSigmaPr());
+          registry.fill(HIST("NsigmaTPCvsTOF_stdcut"), track.tpcNSigmaPr(), track.tofNSigmaPr());
+          // registry.fill(HIST("NsigmaTPCvsTOF^2_stdcut"),track.tpcNSigmaPr() * track.tpcNSigmaPr(), track.tofNSigmaPr() * track.tofNSigmaPr());
+          registry.fill(HIST("NsigmaTOF_K_stdcut"), track.pt(), track.tofNSigmaKa());
+          registry.fill(HIST("NsigmaTPC_K_stdcut"), track.pt(), track.tpcNSigmaKa());
+          registry.fill(HIST("DCAxy_stdcut"), track.dcaXY());
+          registry.fill(HIST("DCAz_stdcut"), track.dcaZ());
+          registry.fill(HIST("DCAxyvspt_stdcut"), track.pt(), track.dcaXY());
+          registry.fill(HIST("DCAzvspt_stdcut"), track.pt(), track.dcaZ());
+          registry.fill(HIST("hcrossedrows_stdcut"), track.tpcNClsCrossedRows());
+          registry.fill(HIST("charge_pt_stdcut"), track.pt(), track.sign());
+
+          registry.fill(HIST("charge_stdcut"), track.sign());
+          registry.fill(HIST("NsigmaTOF_d_stdcut"), track.pt(), track.tofNSigmaDe());
+          registry.fill(HIST("NsigmaTPC_d_stdcut"), track.pt(), track.tpcNSigmaDe());
+          registry.fill(HIST("TOFSignalpr_stdcut"), track.pt(), track.tofExpSignalPr(track.tofSignal()));
+          registry.fill(HIST("TOFSignalK_stdcut"), track.pt(), track.tofExpSignalKa(track.tofSignal()));
+          registry.fill(HIST("TOFSignald_stdcut"), track.pt(), track.tofExpSignalDe(track.tofSignal()));
+
+          if (track.hasTPC()) {
+            registry.fill(HIST("TPC_yess_stdcut"), track.pt());
+            registry.fill(HIST("TPC_yess_eta_stdcut"), track.pt(), track.eta());
+            if (track.hasTOF()) {
+              registry.fill(HIST("TPCandTOF_stdcut"), track.pt());
+              registry.fill(HIST("TPCandTOF_eta_stdcut"), track.pt(), track.eta());
+            }
+          }
+        }
+      }
+    }
+    PROCESS_SWITCH(EtaPhiHistograms, processStandard, "process non filtered track", false);
+  */
+  void process(aod::SingleTrackSel const& tracks)
   {
     for (auto& track : tracks) {
 
@@ -292,7 +294,7 @@ struct EtaPhiHistograms {
       registry.fill(HIST("nsigmaTPC"), track.pt(), track.tpcNSigmaPr());
     }
   }
-  PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);
+  // PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);
 };
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)

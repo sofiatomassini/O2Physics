@@ -19,12 +19,31 @@
 #include "Framework/ASoA.h"
 #include "Framework/AnalysisDataModel.h"
 #include "Common/DataModel/PIDResponse.h"
+#include "Framework/Logger.h"
 
 namespace o2::aod
 {
-
 namespace singletrackselector
 {
+template <typename binningType>
+typename binningType::binned_t packInTable(const float& valueToBin)
+{
+  if (valueToBin <= binningType::binned_min) {
+    return binningType::underflowBin;
+  } else if (valueToBin >= binningType::binned_max) {
+    return binningType::overflowBin;
+  } else {
+    return static_cast<typename binningType::binned_t>(((valueToBin - (binningType::binned_max - binningType::binned_min) * 0.5) / binningType::bin_width));
+  }
+}
+
+template <typename binningType>
+float unPack(const typename binningType::binned_t& b)
+{
+
+  return static_cast<float>((binningType::binned_max - binningType::binned_min) * 0.5 + binningType::bin_width * b);
+}
+/*
 // Function to pack a float into a binned value in table
 template <typename binningType>
 typename binningType::binned_t packInTable(const float& valueToBin)
@@ -37,19 +56,19 @@ typename binningType::binned_t packInTable(const float& valueToBin)
     return static_cast<typename binningType::binned_t>((valueToBin / binningType::bin_width) + 0.5f);
   } else {
     return static_cast<typename binningType::binned_t>((valueToBin / binningType::bin_width) - 0.5f);
-  }
-}
+  }*/
 
 namespace storedcrossedrows
 {
 struct binning {
  public:
   typedef int8_t binned_t;
-  static constexpr int nbins = 160;
+  // static constexpr int nbins = 160;
   //(1 << 8 * sizeof(binned_t)) - 2;
+  static constexpr int nbins = (1 << 8 * sizeof(binned_t)) - 2;
   static constexpr binned_t overflowBin = nbins >> 1;
   static constexpr binned_t underflowBin = -(nbins >> 1);
-  static constexpr float binned_max = 159.5;
+  static constexpr float binned_max = 253.5;
   static constexpr float binned_min = -0.5;
   static constexpr float bin_width = (binned_max - binned_min) / nbins;
 };
@@ -63,8 +82,8 @@ struct binning {
   static constexpr int nbins = (1 << 8 * sizeof(binned_t)) - 2;
   static constexpr binned_t overflowBin = nbins >> 1;
   static constexpr binned_t underflowBin = -(nbins >> 1);
-  static constexpr float binned_max = 6.35;
-  static constexpr float binned_min = -6.35;
+  static constexpr float binned_max = 5.0;
+  static constexpr float binned_min = -5.0;
   static constexpr float bin_width = (binned_max - binned_min) / nbins;
 };
 } // namespace nsigma
@@ -78,14 +97,21 @@ DECLARE_SOA_COLUMN(Pt, pt, float);              // Momentum of the track
 // DECLARE_SOA_COLUMN(PosZ, posZ, float);          // vertex position along z
 DECLARE_SOA_COLUMN(DcaXY, dcaXY, float); // impact parameter of the track
 DECLARE_SOA_COLUMN(DcaZ, dcaZ, float);   // impact parameter of the track
-// DECLARE_SOA_COLUMN(StoredCrossedRows, tpcNClsCrossedRows, float);   // impact parameter of the track
-DECLARE_SOA_COLUMN(StoredCrossedRows, tpcNClsCrossedRows, storedcrossedrows::binning::binned_t);
-DECLARE_SOA_COLUMN(StoredTOFNSigmaPr, storedtofNSigmaPr, nsigma::binning::binned_t);
-DECLARE_SOA_COLUMN(StoredTPCNSigmaPr, storedtpcNSigmaPr, nsigma::binning::binned_t);
+DECLARE_SOA_COLUMN(StoredCrossedRows, storedCrossedRows, storedcrossedrows::binning::binned_t);
+DECLARE_SOA_COLUMN(StoredTOFNSigmaPr, storedTofNSigmaPr, nsigma::binning::binned_t);
+DECLARE_SOA_COLUMN(StoredTPCNSigmaPr, storedTpcNSigmaPr, nsigma::binning::binned_t);
+
+DECLARE_SOA_DYNAMIC_COLUMN(CrossedRows, tpcNClsCrossedRows,
+                           [](storedcrossedrows::binning::binned_t binned) -> float { return singletrackselector::unPack<storedcrossedrows::binning>(binned); });
 DECLARE_SOA_DYNAMIC_COLUMN(TOFNSigmaPr, tofNSigmaPr,
-                           [](nsigma::binning::binned_t nsigma_binned) -> float { return nsigma::binning::bin_width * static_cast<float>(nsigma_binned); });
+                           [](nsigma::binning::binned_t nsigma_binned) -> float { return singletrackselector::unPack<nsigma::binning>(nsigma_binned); });
 DECLARE_SOA_DYNAMIC_COLUMN(TPCNSigmaPr, tpcNSigmaPr,
-                           [](nsigma::binning::binned_t nsigma_binned) -> float { return nsigma::binning::bin_width * static_cast<float>(nsigma_binned); });
+                           [](nsigma::binning::binned_t nsigma_binned) -> float { return singletrackselector::unPack<nsigma::binning>(nsigma_binned); });
+
+// DECLARE_SOA_DYNAMIC_COLUMN(TOFNSigmaPr, tofNSigmaPr,
+//                            [](nsigma::binning::binned_t nsigma_binned) -> float { return nsigma::binning::bin_width * static_cast<float>(nsigma_binned); });
+// DECLARE_SOA_DYNAMIC_COLUMN(TPCNSigmaPr, tpcNSigmaPr,
+//                            [](nsigma::binning::binned_t nsigma_binned) -> float { return nsigma::binning::bin_width * static_cast<float>(nsigma_binned); });
 
 } // namespace singletrackselector
 
@@ -102,6 +128,7 @@ DECLARE_SOA_TABLE(SingleTrackSel, "AOD", "STSEL", // Table of the variables for 
                   singletrackselector::StoredCrossedRows,
                   singletrackselector::StoredTOFNSigmaPr,
                   singletrackselector::StoredTPCNSigmaPr,
+                  singletrackselector::CrossedRows<singletrackselector::StoredCrossedRows>,
                   singletrackselector::TOFNSigmaPr<singletrackselector::StoredTOFNSigmaPr>,
                   singletrackselector::TPCNSigmaPr<singletrackselector::StoredTPCNSigmaPr>);
 } // namespace o2::aod
