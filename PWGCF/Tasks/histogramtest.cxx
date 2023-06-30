@@ -140,18 +140,26 @@ struct EtaPhiHistograms {
       registry.add("TOFSignald_stdcut", "TOFSignald_stdcut", kTH2F, {{1000, 0., 5.0}, {200, 0., 200.}});
     }
     if (doprocessSelected == true) {*/
+    registry.add("eta", "eta", kTH1F, {{200, -2.5, 2.5, "eta"}});
+    registry.add("phi", "phi", kTH1F, {{200, 0., 2. * M_PI, "phi"}});
     registry.add("px", "px", kTH1F, {{100, 0., 5., "px"}});
     registry.add("py", "py", kTH1F, {{100, 0., 5., "py"}});
     registry.add("pz", "pz", kTH1F, {{100, 0., 5., "pz"}});
     registry.add("p", "p", kTH1F, {{100, 0., 5., "p"}});
     registry.add("pt", "pt", kTH1F, {{100, 0., 5., "pt"}});
-    registry.add("dcaxy_to_p", "dcaxy_to_p", kTH2F, {{100, 0., 5.0, "p"}, {100, -0.2, 0.2, "dcaxy"}});
-    registry.add("dcaxy_to_pt", "dcaxy_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaxy"}});
-    registry.add("dcaz_to_p", "dcaz_to_p", kTH2F, {{100, 0., 5., "p"}, {100, -2., 2., "dcaz"}});
-    registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -2., 2., "dcaz"}});
+    registry.add("dcaxy_to_p", "dcaxy_to_p", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaxy"}});
+    registry.add("dcaxy_to_pt", "dcaxy_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -5., 5., "dcaxy"}});
+    registry.add("dcaz_to_p", "dcaz_to_p", kTH2F, {{100, 0., 5., "p"}, {100, -5., 5., "dcaz"}});
+    registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -5., 5., "dcaz"}});
     registry.add("crossed_rows", "crossed_rows", kTH1F, {{160, -0.5, 159.5, "Ncrossedrows"}});
-    registry.add("nsigmaTOF", "nsigmaTOF", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
-    registry.add("nsigmaTPC", "nsigmaTPC", kTH2F, {{100, 0., 5.}, {100, -5., 5.}});
+    registry.add("TPCClusters", "TPCClusters", kTH1F, {{163, -0.5, 162.5, "NTPCClust"}});
+    registry.add("ITSClusters", "ITSClusters", kTH1F, {{10, -0.5, 9.5, "NITSClust"}});
+    registry.add("ITSchi2", "ITSchi2", kTH1F, {{100, 0.0, 40., "ITSchi2"}});
+    registry.add("TPCchi2", "TPCchi2", kTH1F, {{100, 0.0, 6., "TPCchi2"}});
+    registry.add("nsigmaTOFPr", "nsigmaTOFPr", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
+    registry.add("nsigmaTPCPr", "nsigmaTPCPr", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
+    registry.add("nsigmaTOFDe", "nsigmaTOFDe", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
+    registry.add("nsigmaTPCDe", "nsigmaTPCDe", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
   }
   //}
 
@@ -279,7 +287,8 @@ struct EtaPhiHistograms {
   void process(aod::SingleTrackSel const& tracks)
   {
     for (auto& track : tracks) {
-
+      registry.fill(HIST("eta"), track.eta());
+      registry.fill(HIST("phi"), track.phi());
       registry.fill(HIST("px"), track.px());
       registry.fill(HIST("py"), track.py());
       registry.fill(HIST("pz"), track.pz());
@@ -289,9 +298,15 @@ struct EtaPhiHistograms {
       registry.fill(HIST("dcaxy_to_pt"), track.pt(), track.dcaXY());
       registry.fill(HIST("dcaz_to_p"), track.p(), track.dcaZ());
       registry.fill(HIST("dcaz_to_pt"), track.pt(), track.dcaZ());
+      registry.fill(HIST("TPCClusters"), track.tpcNClsFound());
+      registry.fill(HIST("ITSClusters"), track.itsNCls());
+      registry.fill(HIST("ITSchi2"), track.itsChi2NCl());
+      registry.fill(HIST("TPCchi2"), track.tpcChi2NCl());
       registry.fill(HIST("crossed_rows"), track.tpcNClsCrossedRows());
-      registry.fill(HIST("nsigmaTOF"), track.pt(), track.tofNSigmaPr());
-      registry.fill(HIST("nsigmaTPC"), track.pt(), track.tpcNSigmaPr());
+      registry.fill(HIST("nsigmaTOFPr"), track.pt(), track.tofNSigmaPr());
+      registry.fill(HIST("nsigmaTPCPr"), track.pt(), track.tpcNSigmaPr());
+      registry.fill(HIST("nsigmaTOFDe"), track.pt(), track.tofNSigmaDe());
+      registry.fill(HIST("nsigmaTPCDe"), track.pt(), track.tpcNSigmaDe());
     }
   }
   // PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);

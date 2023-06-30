@@ -13,6 +13,7 @@
 /// \author Sofia Tomassini
 /// \since 31 May 2023
 
+#include <Framework/AnalysisDataModel.h>
 #include <fairlogger/Logger.h>
 #include "Framework/AnalysisTask.h"
 #include "Framework/runDataProcessing.h"
@@ -39,6 +40,7 @@ struct singleTrackSelector {
   using Trks = soa::Join<aod::Tracks, aod::TracksExtra, aod::pidEvTimeFlags, aod::TracksDCA,
                          aod::pidTPCFullEl, aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr,
                          aod::pidTOFFullEl, aod::pidTOFFullMu, aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr,
+                         aod::pidTPCFullDe, aod::pidTOFFullDe,
                          aod::TrackSelection>;
   using Coll = soa::Join<aod::Collisions, aod::Mults, aod::EvSels, aod::FT0sCorrected>;
 
@@ -49,6 +51,7 @@ struct singleTrackSelector {
                        ((applyEvSel.node() == 2) && (aod::evsel::sel8 == true));
   Filter vertexFilter = ((o2::aod::collision::posZ < 15.f) && (o2::aod::collision::posZ > -15.f));
   Filter trackFilter = ((o2::aod::track::itsChi2NCl <= 36.f) && (o2::aod::track::itsChi2NCl >= 0.f) && (o2::aod::track::tpcChi2NCl >= 0.f) && (o2::aod::track::tpcChi2NCl <= 4.f));
+
   void process(soa::Filtered<Coll>::iterator const& collision, soa::Filtered<Trks> const& tracks)
   {
 
@@ -56,27 +59,36 @@ struct singleTrackSelector {
 
     for (auto& track : tracks) {
 
-      // LOG(info) << "Packed crossedRows: " << singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()) << ", Unpacked crossedRows: " << singletrackselector::unPack<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()));
-      // LOG(INFO) << "Packed tofNSigmaPr: " << tofNSigmaPrPacked << ", Unpacked tofNSigmaPr: " << tofNSigmaPrUnpacked;
-      // LOG(INFO) << "Packed tpcNSigmaPr: " << tpcNSigmaPrPacked << ", Unpacked tpcNSigmaPr: " << tpcNSigmaPrUnpacked;
+      if (track.tpcNSigmaPr() > 4) {
+        continue;
+      } else {
 
-      tableRow(track.collisionId(),
-               track.px(),
-               track.py(),
-               track.pz(),
-               track.p(),
-               track.pt(),
-               track.dcaXY(),
-               track.dcaZ(),
-               //  track.tpcNClsCrossedRows(),
-               singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
-               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),
-               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaPr()));
+        tableRow(track.collisionId(),
+                 track.px(),
+                 track.py(),
+                 track.pz(),
+                 track.p(),
+                 track.pt(),
+                 track.dcaXY(),
+                 track.dcaZ(),
+                 track.tpcNClsFound(),
+                 track.tpcChi2NCl(),
+                 track.itsNCls(),
+                 track.itsChi2NCl(),
+                 track.eta(),
+                 track.phi(),
+                 //  track.tpcNClsCrossedRows(),
+                 singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
+                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),
+                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaPr()),
+                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaDe()),
+                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaDe()));
 
-      if ((singletrackselector::unPack<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows())) != track.tpcNClsCrossedRows()) && (singletrackselector::unPack<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows())) != (track.tpcNClsCrossedRows() - 1))) {
-        LOG(info) << "crossedRows: " << track.tpcNClsCrossedRows()
-                  << ", Unpacked crossedRows: " << singletrackselector::unPack<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTable<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()));
-        // << "deve essere uguale a" << singletrackselector::unPack<singletrackselector::nsigma::binning>;
+        if ((singletrackselector::unPackInt<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows())) != track.tpcNClsCrossedRows()) && (singletrackselector::unPackInt<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows())) != (track.tpcNClsCrossedRows() - 1))) {
+          LOG(info) << "crossedRows: " << track.tpcNClsCrossedRows()
+                    << ", Unpacked crossedRows: " << singletrackselector::unPackInt<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()));
+          // << "deve essere uguale a" << singletrackselector::unPack<singletrackselector::nsigma::binning>;
+        }
       }
     }
 
