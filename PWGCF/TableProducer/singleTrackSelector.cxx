@@ -40,7 +40,7 @@ struct singleTrackSelector {
   using Trks = soa::Join<aod::Tracks, aod::TracksExtra, aod::pidEvTimeFlags, aod::TracksDCA,
                          aod::pidTPCFullEl, aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr,
                          aod::pidTOFFullEl, aod::pidTOFFullMu, aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr,
-                         aod::pidTPCFullDe, aod::pidTOFFullDe,
+                         aod::pidTPCFullDe, aod::pidTOFFullDe, aod::pidTOFbeta,
                          aod::TrackSelection>;
   using Coll = soa::Join<aod::Collisions, aod::Mults, aod::EvSels, aod::FT0sCorrected>;
 
@@ -59,7 +59,7 @@ struct singleTrackSelector {
 
     for (auto& track : tracks) {
 
-      if (track.tpcNSigmaPr() > 4) {
+      if (abs(track.tpcNSigmaPr()) > 4 || abs(track.tpcNSigmaDe()) > 4) {
         continue;
       } else {
 
@@ -73,10 +73,13 @@ struct singleTrackSelector {
                  track.dcaZ(),
                  track.tpcNClsFound(),
                  track.tpcChi2NCl(),
+                 // track.tpcSignal(),
+                 // track.beta(),
                  track.itsNCls(),
                  track.itsChi2NCl(),
                  track.eta(),
                  track.phi(),
+                 track.sign(),
                  //  track.tpcNClsCrossedRows(),
                  singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
                  singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),

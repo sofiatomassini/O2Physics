@@ -153,6 +153,8 @@ struct EtaPhiHistograms {
     registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -5., 5., "dcaz"}});
     registry.add("crossed_rows", "crossed_rows", kTH1F, {{160, -0.5, 159.5, "Ncrossedrows"}});
     registry.add("TPCClusters", "TPCClusters", kTH1F, {{163, -0.5, 162.5, "NTPCClust"}});
+    // registry.add("TPCSignal", "TPCSignal", kTH2F, {{100, 0., 5., "pt"}, {10000, 0., 10000., "dE/dx"}});
+    // registry.add("TOFbeta", "TOFbeta", kTH2F, {{100, 0., 5., "pt"}, {1000, 0., 1.5, "beta"}});
     registry.add("ITSClusters", "ITSClusters", kTH1F, {{10, -0.5, 9.5, "NITSClust"}});
     registry.add("ITSchi2", "ITSchi2", kTH1F, {{100, 0.0, 40., "ITSchi2"}});
     registry.add("TPCchi2", "TPCchi2", kTH1F, {{100, 0.0, 6., "TPCchi2"}});
@@ -160,6 +162,24 @@ struct EtaPhiHistograms {
     registry.add("nsigmaTPCPr", "nsigmaTPCPr", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
     registry.add("nsigmaTOFDe", "nsigmaTOFDe", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
     registry.add("nsigmaTPCDe", "nsigmaTPCDe", kTH2F, {{100, 0., 5.}, {100, -10., 10.}});
+    registry.add("protons", "protons", kTH1F, {{100, 0., 5., "pt"}});
+    registry.add("antiprotons", "antiprotons", kTH1F, {{100, 0., 5., "pt"}});
+    registry.add("deuterons", "deuterons", kTH1F, {{100, 0., 5., "pt"}});
+    registry.add("antideuterons", "antideuterons", kTH1F, {{100, 0., 5., "pt"}});
+    registry.add("eta_protons", "eta_protons", kTH1F, {{200, -2.5, 2.5, "eta_protons"}});
+    registry.add("eta_antiprotons", "eta_antiprotons", kTH1F, {{200, -2.5, 2.5, "eta_antiprotons"}});
+    registry.add("eta_deuterons", "eta_deuterons", kTH1F, {{200, -2.5, 2.5, "eta_deuterons"}});
+    registry.add("eta_antideuterons", "eta_antideuterons", kTH1F, {{200, -2.5, 2.5, "eta_antideuterons"}});
+    registry.add("dcaxy_to_p_protons", "dcaxy_to_protons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaxy_protons"}});
+    registry.add("dcaxy_to_p_antiprotons", "dcaxy_to_antiprotons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaxy_antiprotons"}});
+    registry.add("dcaxy_to_p_deuterons", "dcaxy_to_deuterons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaxy_deuterons"}});
+    registry.add("dcaxy_to_p_antideuterons", "dcaxy_to_antideuterons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaxy_antideuterons"}});
+    registry.add("dcaz_to_p_protons", "dcaz_to_protons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaz_protons"}});
+    registry.add("dcaz_to_p_antiprotons", "dcaz_to_antiprotons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaz_antiprotons"}});
+    registry.add("dcaz_to_p_deuterons", "dcaz_to_deuterons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaz_deuterons"}});
+    registry.add("dcaz_to_p_antideuterons", "dcaz_to_antideuterons", kTH2F, {{100, 0., 5.0, "p"}, {100, -5., 5., "dcaz_antideuterons"}});
+    registry.add("antiprotons_event", "antiprotons_event", kTH1F, {{20000, 0, 20000, "antiprotons_event"}});
+    registry.add("antideuterons_event", "antideuterons_event", kTH1F, {{20000, 0, 20000, "antideuterons_event"}});
   }
   //}
 
@@ -300,6 +320,8 @@ struct EtaPhiHistograms {
       registry.fill(HIST("dcaz_to_pt"), track.pt(), track.dcaZ());
       registry.fill(HIST("TPCClusters"), track.tpcNClsFound());
       registry.fill(HIST("ITSClusters"), track.itsNCls());
+      // registry.fill(HIST("TPCSignal"), track.pt(), track.tpcSignal());
+      // registry.fill(HIST("TOFbeta"), track.pt(), track.tofBeta());
       registry.fill(HIST("ITSchi2"), track.itsChi2NCl());
       registry.fill(HIST("TPCchi2"), track.tpcChi2NCl());
       registry.fill(HIST("crossed_rows"), track.tpcNClsCrossedRows());
@@ -307,6 +329,43 @@ struct EtaPhiHistograms {
       registry.fill(HIST("nsigmaTPCPr"), track.pt(), track.tpcNSigmaPr());
       registry.fill(HIST("nsigmaTOFDe"), track.pt(), track.tofNSigmaDe());
       registry.fill(HIST("nsigmaTPCDe"), track.pt(), track.tpcNSigmaDe());
+
+      if (abs(track.tpcNSigmaPr()) > 3) {
+        continue;
+      } else if (track.pt() <= 0.75 || (track.pt() > 0.75 && abs(track.tofNSigmaPr()) <= 3)) {
+        if (track.sign() > 0) {
+          registry.fill(HIST("protons"), track.pt());
+          registry.fill(HIST("eta_protons"), track.eta());
+          registry.fill(HIST("dcaxy_to_p_protons"), track.p(), track.dcaXY());
+          registry.fill(HIST("dcaz_to_p_protons"), track.p(), track.dcaZ());
+
+        } else {
+          registry.fill(HIST("antiprotons"), track.pt());
+          registry.fill(HIST("eta_antiprotons"), track.eta());
+          registry.fill(HIST("dcaxy_to_p_antiprotons"), track.p(), track.dcaXY());
+          registry.fill(HIST("dcaz_to_p_antiprotons"), track.p(), track.dcaZ());
+          registry.fill(HIST("antiprotons_event"), track.collisionId());
+        }
+      }
+      // if ((track.pt() <= 0.75 && abs(track.tpcNSigmaPr()) <= 3) || (track.pt() > 0.75 && abs(track.tpcNSigmaPr()) <= 3 && abs(track.tofNSigmaPr()) <= 3)) {
+
+      if (abs(track.tpcNSigmaDe()) > 3) {
+        continue;
+      } else if (track.pt() <= 0.75 || (track.pt() > 0.75 && abs(track.tofNSigmaDe()) <= 3)) {
+        if (track.sign() > 0) {
+          registry.fill(HIST("deuterons"), track.pt());
+          registry.fill(HIST("eta_deuterons"), track.eta());
+          registry.fill(HIST("dcaxy_to_p_deuterons"), track.p(), track.dcaXY());
+          registry.fill(HIST("dcaz_to_p_deuterons"), track.p(), track.dcaZ());
+
+        } else {
+          registry.fill(HIST("antideuterons"), track.pt());
+          registry.fill(HIST("eta_antideuterons"), track.eta());
+          registry.fill(HIST("dcaxy_to_p_antideuterons"), track.p(), track.dcaXY());
+          registry.fill(HIST("dcaz_to_p_antideuterons"), track.p(), track.dcaZ());
+          registry.fill(HIST("antideuterons_event"), track.collisionId());
+        }
+      }
     }
   }
   // PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);
