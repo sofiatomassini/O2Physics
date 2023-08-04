@@ -153,8 +153,6 @@ struct EtaPhiHistograms {
     registry.add("dcaz_to_pt", "dcaz_to_pt", kTH2F, {{100, 0., 5., "pt"}, {100, -5., 5., "dcaz"}});
     registry.add("crossed_rows", "crossed_rows", kTH1F, {{160, -0.5, 159.5, "Ncrossedrows"}});
     registry.add("TPCClusters", "TPCClusters", kTH1F, {{163, -0.5, 162.5, "NTPCClust"}});
-    // registry.add("TPCSignal", "TPCSignal", kTH2F, {{100, 0., 5., "pt"}, {10000, 0., 10000., "dE/dx"}});
-    // registry.add("TOFbeta", "TOFbeta", kTH2F, {{100, 0., 5., "pt"}, {1000, 0., 1.5, "beta"}});
     registry.add("ITSClusters", "ITSClusters", kTH1F, {{10, -0.5, 9.5, "NITSClust"}});
     registry.add("ITSchi2", "ITSchi2", kTH1F, {{100, 0.0, 40., "ITSchi2"}});
     registry.add("TPCchi2", "TPCchi2", kTH1F, {{100, 0.0, 6., "TPCchi2"}});
@@ -320,8 +318,6 @@ struct EtaPhiHistograms {
       registry.fill(HIST("dcaz_to_pt"), track.pt(), track.dcaZ());
       registry.fill(HIST("TPCClusters"), track.tpcNClsFound());
       registry.fill(HIST("ITSClusters"), track.itsNCls());
-      // registry.fill(HIST("TPCSignal"), track.pt(), track.tpcSignal());
-      // registry.fill(HIST("TOFbeta"), track.pt(), track.tofBeta());
       registry.fill(HIST("ITSchi2"), track.itsChi2NCl());
       registry.fill(HIST("TPCchi2"), track.tpcChi2NCl());
       registry.fill(HIST("crossed_rows"), track.tpcNClsCrossedRows());
