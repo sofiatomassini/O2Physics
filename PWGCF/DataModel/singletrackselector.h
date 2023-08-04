@@ -121,10 +121,10 @@ DECLARE_SOA_COLUMN(DcaXY, dcaXY, float);               // impact parameter of th
 DECLARE_SOA_COLUMN(DcaZ, dcaZ, float);                 // impact parameter of the track
 DECLARE_SOA_COLUMN(TPCNClsFound, tpcNClsFound, float); // Number of TPC clusters
 DECLARE_SOA_COLUMN(TPCChi2NCl, tpcChi2NCl, float);     // TPC chi2
-//DECLARE_SOA_COLUMN(TPCSignal, tpcSignal, float); // Number of TPC clusters
-//DECLARE_SOA_COLUMN(TOFBeta, tofBeta, float); // Number of TPC clusters
-DECLARE_SOA_COLUMN(ITSNCls, itsNCls, float);           // Number of ITS clusters
-DECLARE_SOA_COLUMN(ITSChi2NCl, itsChi2NCl, float);     // ITS chi2
+// DECLARE_SOA_COLUMN(TPCSignal, tpcSignal, float); // Number of TPC clusters
+// DECLARE_SOA_COLUMN(TOFBeta, tofBeta, float); // Number of TPC clusters
+DECLARE_SOA_COLUMN(ITSNCls, itsNCls, float);       // Number of ITS clusters
+DECLARE_SOA_COLUMN(ITSChi2NCl, itsChi2NCl, float); // ITS chi2
 DECLARE_SOA_COLUMN(Eta, eta, float);
 DECLARE_SOA_COLUMN(Phi, phi, float);
 DECLARE_SOA_COLUMN(Sign, sign, float);
@@ -164,8 +164,8 @@ DECLARE_SOA_TABLE(SingleTrackSel, "AOD", "STSEL", // Table of the variables for 
                   singletrackselector::DcaZ,
                   singletrackselector::TPCNClsFound,
                   singletrackselector::TPCChi2NCl,
-                  //singletrackselector::TPCSignal,
-                  //singletrackselector::TOFBeta,
+                  // singletrackselector::TPCSignal,
+                  // singletrackselector::TOFBeta,
                   singletrackselector::ITSNCls,
                   singletrackselector::ITSChi2NCl,
                   singletrackselector::Eta,
