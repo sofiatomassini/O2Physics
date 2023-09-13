@@ -25,6 +25,8 @@
 
 #include "PWGCF/DataModel/singletrackselector.h"
 
+#include "TDatabasePDG.h"
+
 using namespace o2;
 using namespace o2::framework;
 using namespace o2::framework::expressions;
@@ -45,6 +47,7 @@ struct singleTrackSelector {
   using Coll = soa::Join<aod::Collisions, aod::Mults, aod::EvSels, aod::FT0sCorrected>;
 
   Produces<o2::aod::SingleTrackSel> tableRow;
+  Produces<o2::aod::SingleCollSel> tableRowColl;
 
   Filter eventFilter = (applyEvSel.node() == 0) ||
                        ((applyEvSel.node() == 1) && (aod::evsel::sel7 == true)) ||
@@ -56,28 +59,37 @@ struct singleTrackSelector {
   {
 
     tableRow.reserve(tracks.size());
+    // tableRowColl.reserve(1);
+
+    tableRowColl(collision.globalIndex(),
+                 collision.multTPC(),
+                 collision.posZ());
 
     for (auto& track : tracks) {
-
-      if (abs(track.tpcNSigmaPr()) > 4 || abs(track.tpcNSigmaDe()) > 4) {
-        continue;
-      } else {
+      if (track.hasITS()) {
 
         tableRow(track.collisionId(),
+                 track.hasITS(),
+                 track.hasTOF(),
                  track.px(),
                  track.py(),
                  track.pz(),
                  track.p(),
                  track.pt(),
+                 track.tpcInnerParam(),
+                 track.tpcSignal(),
+                 track.beta(),
                  track.dcaXY(),
                  track.dcaZ(),
                  track.tpcNClsFound(),
+                 track.tpcFoundOverFindableCls(),
                  track.tpcChi2NCl(),
                  track.itsNCls(),
                  track.itsChi2NCl(),
+                 track.sign(),
                  track.eta(),
                  track.phi(),
-                 track.sign(),
+                 //  track.tpcNClsCrossedRows(),
                  singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
                  singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),
                  singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaPr()),
@@ -90,10 +102,10 @@ struct singleTrackSelector {
           // << "deve essere uguale a" << singletrackselector::unPack<singletrackselector::nsigma::binning>;
         }
       }
-    }
 
-    // LOG(info) << "UnPacked crossedRows: " << singletrackselector::unPack(o2::aod::singletrackselector::storedcrossedrows::binning::binned_t(o2::aod::singletrackselector::storedcrossedrows::binning(tpcNClsCrossedRows)) )
-    // LOG(info) << "Unpacked crossedRows: " << unpackedValue;
+      // LOG(info) << "UnPacked crossedRows: " << singletrackselector::unPack(o2::aod::singletrackselector::storedcrossedrows::binning::binned_t(o2::aod::singletrackselector::storedcrossedrows::binning(tpcNClsCrossedRows)) )
+      // LOG(info) << "Unpacked crossedRows: " << unpackedValue;
+    }
   }
 };
 
