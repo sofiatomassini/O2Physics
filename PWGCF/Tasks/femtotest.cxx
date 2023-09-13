@@ -42,15 +42,17 @@ using namespace o2::aod;
 using namespace o2::framework;
 using namespace o2::framework::expressions;
 
-double particle_mass(int PDGcode){
-  //if(PDGcode == 2212) return TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-  if(PDGcode == 1000010020) return 1.87561294257;
-  else return TDatabasePDG::Instance()->GetParticle(PDGcode)->Mass();
+double particle_mass(int PDGcode)
+{
+  // if(PDGcode == 2212) return TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+  if (PDGcode == 1000010020)
+    return 1.87561294257;
+  else
+    return TDatabasePDG::Instance()->GetParticle(PDGcode)->Mass();
 }
 
-
 struct FemtoCorrelations {
-  //using allinfo = soa::Join<aod::Tracks, aod::TracksExtra, aod::TrackSelection, aod::pidTPCFullPr, aod::TOFSignal, aod::TracksDCA, aod::pidTOFFullPr, aod::pidTOFbeta, aod::pidTOFFullKa, aod::pidTPCFullKa, aod::pidTOFFullDe, aod::pidTPCFullDe>; // aod::pidTPCPr
+  // using allinfo = soa::Join<aod::Tracks, aod::TracksExtra, aod::TrackSelection, aod::pidTPCFullPr, aod::TOFSignal, aod::TracksDCA, aod::pidTOFFullPr, aod::pidTOFbeta, aod::pidTOFFullKa, aod::pidTPCFullKa, aod::pidTOFFullDe, aod::pidTPCFullDe>; // aod::pidTPCPr
   /// Construct a registry object with direct declaration
   HistogramRegistry registry{"registry", {}, OutputObjHandlingPolicy::AnalysisObject};
 
@@ -84,11 +86,10 @@ struct FemtoCorrelations {
   Configurable<int> vertexbinwidth{"vertexbinwidth", 2, ""};
 
   bool IsIdentical;
-  
+
   std::map<std::string, float> trackcuts;
   std::map<std::string, double> PIDcuts_1;
   std::map<std::string, double> PIDcuts_2;
-
 
   void init(o2::framework::InitContext&)
   {
@@ -98,23 +99,17 @@ struct FemtoCorrelations {
     IsIdentical = (particlePDG_1 == particlePDG_2) && (sign_1 == sign_2);
 
     trackcuts = {
-      {"min_P", min_P}, {"max_P", max_P},
-      {"eta", eta}, {"tpcNClsFound", tpcNClsFound}, {"tpcChi2NCl", tpcChi2NCl},
-      {"dcaXY", dcaXY}, {"dcaZ", dcaXY}, {"itsNCls", itsNCls}
-    };
+      {"min_P", min_P}, {"max_P", max_P}, {"eta", eta}, {"tpcNClsFound", tpcNClsFound}, {"tpcChi2NCl", tpcChi2NCl}, {"dcaXY", dcaXY}, {"dcaZ", dcaXY}, {"itsNCls", itsNCls}};
 
     PIDcuts_1 = {
-      {"sign", sign_1}, {"particlePDG", particlePDG_1}, {"tpcNSigma", tpcNSigma_1}, {"PIDtrshld", PIDtrshld_1}, {"tpctofNSigma", tpctofNSigma_1}
-    };
+      {"sign", sign_1}, {"particlePDG", particlePDG_1}, {"tpcNSigma", tpcNSigma_1}, {"PIDtrshld", PIDtrshld_1}, {"tpctofNSigma", tpctofNSigma_1}};
 
-    if(!IsIdentical){
+    if (!IsIdentical) {
       PIDcuts_2 = {
-        {"sign", sign_2}, {"particlePDG", particlePDG_2}, {"tpcNSigma", tpcNSigma_2}, {"PIDtrshld", PIDtrshld_2}, {"tpctofNSigma", tpctofNSigma_2}
-      };
+        {"sign", sign_2}, {"particlePDG", particlePDG_2}, {"tpcNSigma", tpcNSigma_2}, {"PIDtrshld", PIDtrshld_2}, {"tpctofNSigma", tpctofNSigma_2}};
     }
   }
 
-  
   void process(aod::SingleCollSel const& collisions, aod::SingleTrackSel const& tracks)
   {
 
@@ -124,19 +119,19 @@ struct FemtoCorrelations {
     std::map<std::pair<int, int>, std::vector<int>> multbins;
 
     for (auto& track : tracks) {
-      if(track.trackCuts(&trackcuts)){
+      if (track.trackCuts(&trackcuts)) {
 
-        if(track.pidCuts(&PIDcuts_1)){
-          //FemtoParticle* Particle1 = new FemtoParticle( track.energy(TDatabasePDG::Instance()->GetParticle(PIDcuts_1["particlePDG"])->Mass()), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
-          FemtoParticle* Particle1 = new FemtoParticle( track.energy(particle_mass(PIDcuts_1["particlePDG"])), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
+        if (track.pidCuts(&PIDcuts_1)) {
+          // FemtoParticle* Particle1 = new FemtoParticle( track.energy(TDatabasePDG::Instance()->GetParticle(PIDcuts_1["particlePDG"])->Mass()), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
+          FemtoParticle* Particle1 = new FemtoParticle(track.energy(particle_mass(PIDcuts_1["particlePDG"])), track.px(), track.py(), track.pz(), track.eta(), track.phi());
           Particle1->SetSign(PIDcuts_1["sign"]);
           Particle1->SetMagField(0.5);
           selectedtracks_1[track.collisionId()].push_back(Particle1);
         }
 
-        if(!IsIdentical && track.pidCuts(&PIDcuts_2)){
-          //FemtoParticle* Particle2 = new FemtoParticle( track.energy(TDatabasePDG::Instance()->GetParticle(PIDcuts_2["particlePDG"])->Mass()), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
-          FemtoParticle* Particle2 = new FemtoParticle( track.energy(particle_mass(PIDcuts_2["particlePDG"])), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
+        if (!IsIdentical && track.pidCuts(&PIDcuts_2)) {
+          // FemtoParticle* Particle2 = new FemtoParticle( track.energy(TDatabasePDG::Instance()->GetParticle(PIDcuts_2["particlePDG"])->Mass()), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
+          FemtoParticle* Particle2 = new FemtoParticle(track.energy(particle_mass(PIDcuts_2["particlePDG"])), track.px(), track.py(), track.pz(), track.eta(), track.phi());
           Particle2->SetSign(PIDcuts_2["sign"]);
           Particle2->SetMagField(0.5);
           selectedtracks_2[track.collisionId()].push_back(Particle2);
@@ -145,93 +140,100 @@ struct FemtoCorrelations {
     }
 
     for (auto& collision : collisions) {
-      if(abs(collision.posZ()) > VertexZ) continue;
-      if(selectedtracks_1.find(collision.globalIndex()) == selectedtracks_1.end()){
-        if(IsIdentical) continue;
-        else if(selectedtracks_2.find(collision.globalIndex()) == selectedtracks_2.end()) continue;
+      if (abs(collision.posZ()) > VertexZ)
+        continue;
+      if (selectedtracks_1.find(collision.globalIndex()) == selectedtracks_1.end()) {
+        if (IsIdentical)
+          continue;
+        else if (selectedtracks_2.find(collision.globalIndex()) == selectedtracks_2.end())
+          continue;
       }
 
-      multbins[std::pair<int, int>{round(collision.posZ()/vertexbinwidth), floor(collision.mult()/multbinwidth)}].push_back(collision.globalIndex());
+      multbins[std::pair<int, int>{round(collision.posZ() / vertexbinwidth), floor(collision.mult() / multbinwidth)}].push_back(collision.globalIndex());
     }
 
     //============================================================================
 
-    if(IsIdentical){
-      //same event identical
+    if (IsIdentical) {
+      // same event identical
 
-      for (auto i = selectedtracks_1.begin(); i != selectedtracks_1.end(); i++){
-        if((i->second).size() < 2) continue;
+      for (auto i = selectedtracks_1.begin(); i != selectedtracks_1.end(); i++) {
+        if ((i->second).size() < 2)
+          continue;
 
         std::vector<std::vector<int>> comb_idx;
         comb(comb_idx, (i->second).size(), 2);
-      
-        for(auto indx : comb_idx){
 
-          FemtoPair* Pair = new FemtoPair((i->second)[indx[0]],   (i->second)[indx[1]],   IsIdentical);
-          if(!Pair->IsClosePair(deta, dphi, radiusTPC)) registry.fill(HIST("SE"), Pair->GetKstar());  // close pair separation doesn't work properly, need eta and phi at some position in the barrel
+        for (auto indx : comb_idx) {
+
+          FemtoPair* Pair = new FemtoPair((i->second)[indx[0]], (i->second)[indx[1]], IsIdentical);
+          if (!Pair->IsClosePair(deta, dphi, radiusTPC))
+            registry.fill(HIST("SE"), Pair->GetKstar()); // close pair separation doesn't work properly, need eta and phi at some position in the barrel
         }
       } // end of same event identical
 
-      //mixed event identical
+      // mixed event identical
 
-      for (auto i = multbins.begin(); i != multbins.end(); i++){
-        if((i->second).size() < 2) continue;
+      for (auto i = multbins.begin(); i != multbins.end(); i++) {
+        if ((i->second).size() < 2)
+          continue;
 
         std::vector<std::vector<int>> comb_idx;
         comb(comb_idx, (i->second).size(), 2);
 
-        for(auto indx : comb_idx){
+        for (auto indx : comb_idx) {
           int colId_1 = (i->second)[indx[0]];
           int colId_2 = (i->second)[indx[1]];
 
-          for(auto ii : selectedtracks_1[colId_1]){
-            for(auto iii : selectedtracks_1[colId_2]){
+          for (auto ii : selectedtracks_1[colId_1]) {
+            for (auto iii : selectedtracks_1[colId_2]) {
               FemtoPair* Pair = new FemtoPair(ii, iii, IsIdentical);
               registry.fill(HIST("ME"), Pair->GetKstar());
             }
           }
         }
-      }// end of mixed event identical
+      } // end of mixed event identical
 
     }
 
-    else{
+    else {
 
       // same event non-identical
-      for (auto i = selectedtracks_1.begin(); i != selectedtracks_1.end(); i++){ 
+      for (auto i = selectedtracks_1.begin(); i != selectedtracks_1.end(); i++) {
 
         auto j = selectedtracks_2.find(i->first);
-        if(j == selectedtracks_2.end()) continue;
+        if (j == selectedtracks_2.end())
+          continue;
 
-        for(auto ii : i->second ){
-          for(auto iii : j->second ){
+        for (auto ii : i->second) {
+          for (auto iii : j->second) {
             FemtoPair* Pair = new FemtoPair(ii, iii, IsIdentical);
-            if(!Pair->IsClosePair(deta, dphi, radiusTPC)) registry.fill(HIST("SE"), Pair->GetKstar());  // close pair separation doesn't work properly, need eta and phi at some position in the barrel
+            if (!Pair->IsClosePair(deta, dphi, radiusTPC))
+              registry.fill(HIST("SE"), Pair->GetKstar()); // close pair separation doesn't work properly, need eta and phi at some position in the barrel
           }
         }
-      }// end of same event non-identical
+      } // end of same event non-identical
 
-      for (auto i = multbins.begin(); i != multbins.end(); i++){
-        if((i->second).size() < 2) continue;
+      for (auto i = multbins.begin(); i != multbins.end(); i++) {
+        if ((i->second).size() < 2)
+          continue;
 
         std::vector<std::vector<int>> comb_idx;
         comb(comb_idx, (i->second).size(), 2);
 
-        for(auto indx : comb_idx){
+        for (auto indx : comb_idx) {
           int colId_1 = (i->second)[indx[0]];
           int colId_2 = (i->second)[indx[1]];
 
-          for(auto ii : selectedtracks_1[colId_1]){
-            for(auto iii : selectedtracks_2[colId_2]){
+          for (auto ii : selectedtracks_1[colId_1]) {
+            for (auto iii : selectedtracks_2[colId_2]) {
               FemtoPair* Pair = new FemtoPair(ii, iii, IsIdentical);
               registry.fill(HIST("ME"), Pair->GetKstar());
             }
           }
         }
       }
-
     }
-    
   }
   // PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);
 };
