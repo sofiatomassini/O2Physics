@@ -37,6 +37,9 @@ using namespace o2::aod;
 struct singleTrackSelector {
 
   Configurable<int> applyEvSel{"applyEvSel", 2, "Flag to apply rapidity cut: 0 -> no event selection, 1 -> Run 2 event selection, 2 -> Run 3 event selection"};
+  Configurable<float> cutDcaXy{"cutDcaXy", 0.12, ""};
+  Configurable<float> cutTPCNSigmaPr{"cutTPCNSigmaPr", 3.f, "Cut on the TPC nsigma for protons"};
+  Configurable<float> cutTPCNSigmaDe{"cutTPCNSigmaDe", 3.f, "Cut on the TPC nsigma for deuteron"};
   // Configurable<int> trackSelection{"trackSelection", 1, "Track selection: 0 -> No Cut, 1 -> kGlobalTrack, 2 -> kGlobalTrackWoPtEta, 3 -> kGlobalTrackWoDCA, 4 -> kQualityTracks, 5 -> kInAcceptanceTracks"};
 
   using Trks = soa::Join<aod::Tracks, aod::TracksExtra, aod::pidEvTimeFlags, aod::TracksDCA,
@@ -57,54 +60,47 @@ struct singleTrackSelector {
 
   void process(soa::Filtered<Coll>::iterator const& collision, soa::Filtered<Trks> const& tracks)
   {
-
     tableRow.reserve(tracks.size());
-    // tableRowColl.reserve(1);
-
     tableRowColl(collision.globalIndex(),
                  collision.multTPC(),
                  collision.posZ());
 
     for (auto& track : tracks) {
-      if (track.hasITS()) {
-
-        tableRow(track.collisionId(),
-                 track.hasITS(),
-                 track.hasTOF(),
-                 track.px(),
-                 track.py(),
-                 track.pz(),
-                 track.p(),
-                 track.pt(),
-                 track.tpcInnerParam(),
-                 track.tpcSignal(),
-                 track.beta(),
-                 track.dcaXY(),
-                 track.dcaZ(),
-                 track.tpcNClsFound(),
-                 track.tpcFoundOverFindableCls(),
-                 track.tpcChi2NCl(),
-                 track.itsNCls(),
-                 track.itsChi2NCl(),
-                 track.sign(),
-                 track.eta(),
-                 track.phi(),
-                 //  track.tpcNClsCrossedRows(),
-                 singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
-                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),
-                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaPr()),
-                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaDe()),
-                 singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaDe()));
-
-        if ((singletrackselector::unPackInt<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows())) != track.tpcNClsCrossedRows()) && (singletrackselector::unPackInt<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows())) != (track.tpcNClsCrossedRows() - 1))) {
-          LOG(info) << "crossedRows: " << track.tpcNClsCrossedRows()
-                    << ", Unpacked crossedRows: " << singletrackselector::unPackInt<singletrackselector::storedcrossedrows::binning>(singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()));
-          // << "deve essere uguale a" << singletrackselector::unPack<singletrackselector::nsigma::binning>;
-        }
+      if (abs(track.dcaXY()) > cutDcaXy) {
+        continue;
       }
-
-      // LOG(info) << "UnPacked crossedRows: " << singletrackselector::unPack(o2::aod::singletrackselector::storedcrossedrows::binning::binned_t(o2::aod::singletrackselector::storedcrossedrows::binning(tpcNClsCrossedRows)) )
-      // LOG(info) << "Unpacked crossedRows: " << unpackedValue;
+      if (abs(track.tpcNSigmaPr()) > cutTPCNSigmaPr) {
+        continue;
+      }
+      if (abs(track.tpcNSigmaDe()) > cutTPCNSigmaDe) {
+        continue;
+      }
+      tableRow(tableRowColl.lastIndex(),
+               track.hasITS(),
+               track.hasTOF(),
+               track.px(),
+               track.py(),
+               track.pz(),
+               track.p(),
+               track.pt(),
+               track.tpcInnerParam(),
+               track.tpcSignal(),
+               track.beta(),
+               track.dcaXY(),
+               track.dcaZ(),
+               track.tpcNClsFound(),
+               track.tpcFoundOverFindableCls(),
+               track.tpcChi2NCl(),
+               track.itsNCls(),
+               track.itsChi2NCl(),
+               track.sign(),
+               track.eta(),
+               track.phi(),
+               singletrackselector::packInTableInt<singletrackselector::storedcrossedrows::binning>(track.tpcNClsCrossedRows()),
+               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaPr()),
+               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaPr()),
+               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tofNSigmaDe()),
+               singletrackselector::packInTable<singletrackselector::nsigma::binning>(track.tpcNSigmaDe()));
     }
   }
 };
