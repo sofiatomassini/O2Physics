@@ -131,7 +131,6 @@ struct QAHistograms {
       if (!track.trackCuts(&trackcuts) || !track.pidCuts(&PIDcuts))
         continue;
       else {
-
         registry.fill(HIST("eta"), track.eta());
         registry.fill(HIST("phi"), track.phi());
         registry.fill(HIST("etaphi"), track.eta(), track.phi());
