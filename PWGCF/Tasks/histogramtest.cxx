@@ -118,6 +118,8 @@ struct QAHistograms {
       registry.add("nsigmaTPCTOF", "Deuteron n_{#sigma} TPC vs n_{#sigma} TOF", kTH3F, {{100, 0., 5., "#it{p} (GeV/#it{c})"}, {100, -10., 10., "n^{TPC}_{#sigma, d}"}, {100, -10., 10., "n^{TOF}_{#sigma, d}"}});
     }
     // if(singletrackselector::HasTOF)
+      registry.add("events", "vertex position along z; v_z (cm); counts", kTH1F, {{20, -20., 20.}});
+
   }
 
   void process(aod::SingleCollSel const& collisions, aod::SingleTrackSel const& tracks)
@@ -164,6 +166,9 @@ struct QAHistograms {
           registry.fill(HIST("nsigmaTPCTOF"), track.p(), track.tpcNSigmaDe(), track.tofNSigmaDe());
         }
       }
+    }
+    for (auto& collision : collisions) {
+      registry.fill(HIST("events"), collision.posZ());
     }
   }
   // PROCESS_SWITCH(EtaPhiHistograms, processSelected, "process filtered track", false);
