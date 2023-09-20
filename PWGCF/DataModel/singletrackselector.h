@@ -16,6 +16,8 @@
 #ifndef PWGCF_DATAMODEL_SINGLETRACKSELECTOR_H_
 #define PWGCF_DATAMODEL_SINGLETRACKSELECTOR_H_
 
+#include <sys/_types/_int32_t.h>
+#include <sys/_types/_int8_t.h>
 #include "Framework/ASoA.h"
 #include "Framework/AnalysisDataModel.h"
 #include "Common/DataModel/PIDResponse.h"
@@ -44,7 +46,6 @@ float unPack(const typename binningType::binned_t& b)
 {
   return static_cast<float>(binningType::bin_width * b);
   // return static_cast<float>((binningType::binned_max - binningType::binned_min) * 0.5 + binningType::bin_width * b);
-
 }
 
 template <typename binningType>
@@ -87,8 +88,6 @@ namespace storedcrossedrows
 struct binning {
  public:
   typedef int8_t binned_t;
-  // static constexpr int nbins = 160;
-  //(1 << 8 * sizeof(binned_t)) - 2;
   static constexpr int nbins = (1 << 8 * sizeof(binned_t)) - 2;
   static constexpr binned_t overflowBin = nbins >> 1;
   static constexpr binned_t underflowBin = -(nbins >> 1);
@@ -111,8 +110,17 @@ struct binning {
   static constexpr float bin_width = (binned_max - binned_min) / nbins;
 };
 } // namespace nsigma
+DECLARE_SOA_COLUMN(Mult, mult, int); // Multiplicity of the collision
+DECLARE_SOA_COLUMN(PosZ, posZ, int); // Vertex of the collision
+} // namespace singletrackselector
 
-DECLARE_SOA_INDEX_COLUMN(Collision, collision); // Index to the collision
+DECLARE_SOA_TABLE(SingleCollSels, "AOD", "SCSEL", // Table of the variables for single track selection.
+                  o2::soa::Index<>,
+                  singletrackselector::Mult,
+                  singletrackselector::PosZ);
+namespace singletrackselector
+{
+DECLARE_SOA_INDEX_COLUMN(SingleCollSel, singleCollSel); // Index to the collision
 DECLARE_SOA_COLUMN(HasTOF, hasTOF, bool);
 DECLARE_SOA_COLUMN(HasITS, hasITS, bool);
 DECLARE_SOA_COLUMN(Px, px, float); // Momentum of the track
@@ -155,26 +163,25 @@ DECLARE_SOA_DYNAMIC_COLUMN(TPCNSigmaDe, tpcNSigmaDe,
 DECLARE_SOA_DYNAMIC_COLUMN(Energy, energy,
                            [](float px, float py, float pz, float mass) -> float { return sqrt(px * px + py * py + pz * pz + mass * mass); });
 DECLARE_SOA_DYNAMIC_COLUMN(TrackCuts, trackCuts,
-                           [](float p, float eta, float dcaXY, float dcaZ,
+                           [](float px, float py, float pz, float eta, float dcaXY, float dcaZ,
                               float tpcNClsFound, float tpcChi2NCl, float itsNCls, float tpcCrossedRowsOverFindableCls, storedcrossedrows::binning::binned_t storedCrossedRows,
                               std::map<std::string, float>* track_cuts) -> bool {
-                            if(p < (*track_cuts)["min_P"] || p > (*track_cuts)["max_P"]) return false;
+                            if(sqrt(px * px + py * py + pz * pz) < (*track_cuts)["min_P"] || sqrt(px * px + py * py + pz * pz) > (*track_cuts)["max_P"]) return false;
                             if(abs(eta) > (*track_cuts)["eta"]) return false;
                             if(tpcNClsFound < (*track_cuts)["tpcNClsFound"] || tpcChi2NCl > (*track_cuts)["tpcChi2NCl"]) return false;
-                            if(abs(dcaXY) > (*track_cuts)["dcaXY"] || abs(dcaZ) > (*track_cuts)["dcaZ"]) return false;
+                            if(abs(dcaXY) > (*track_cuts)["dcaXY"]) return false;
+                            if (abs(dcaZ) > (*track_cuts)["dcaZ"]) return false;
                             if(itsNCls < (*track_cuts)["itsNCls"]) return false;
                             if(singletrackselector::unPackOffset<storedcrossedrows::binning>(storedCrossedRows)<(*track_cuts)["crossedrows"]) return false;
                             if(tpcCrossedRowsOverFindableCls < (*track_cuts)["crossedRows/findableCls"]) return false;
-                           // if(singletrackselector::unPack<storedcrossedrows::binning>(storedCrossedRows)> (*track_cuts)["crossedrows"]) return false;
-
                             return true; });
 
 DECLARE_SOA_DYNAMIC_COLUMN(PIDCuts, pidCuts,
-                           [](float pt, float sign, nsigma::binning::binned_t storedTpcNSigmaPr, nsigma::binning::binned_t storedTofNSigmaPr,
+                           [](int8_t sign, float px, float py, float pz, nsigma::binning::binned_t storedTpcNSigmaPr, nsigma::binning::binned_t storedTofNSigmaPr,
                               nsigma::binning::binned_t storedTpcNSigmaDe, nsigma::binning::binned_t storedTofNSigmaDe,
                               std::map<std::string, double>* PID_cuts) -> bool {
                             if(sign != (*PID_cuts)["sign"]) return false;
-                            if(pt < (*PID_cuts)["PIDtrshld"]){
+                            if(sqrt(px * px + py * py) < (*PID_cuts)["PIDtrshld"]){
                               if((*PID_cuts)["particlePDG"] == 2212 && abs(singletrackselector::unPack<nsigma::binning>(storedTpcNSigmaPr)) > (*PID_cuts)["tpcNSigma"]) return false;
                               if((*PID_cuts)["particlePDG"] == 1000010020 && abs(singletrackselector::unPack<nsigma::binning>(storedTpcNSigmaDe)) > (*PID_cuts)["tpcNSigma"]) return false;
                             }
@@ -190,21 +197,11 @@ DECLARE_SOA_DYNAMIC_COLUMN(PIDCuts, pidCuts,
                             }
 
                             return true; });
-
-// DECLARE_SOA_DYNAMIC_COLUMN(TOFNSigmaPr, tofNSigmaPr,
-//                            [](nsigma::binning::binned_t nsigma_binned) -> float { return nsigma::binning::bin_width * static_cast<float>(nsigma_binned); });
-// DECLARE_SOA_DYNAMIC_COLUMN(TPCNSigmaPr, tpcNSigmaPr,
-//                            [](nsigma::binning::binned_t nsigma_binned) -> float { return nsigma::binning::bin_width * static_cast<float>(nsigma_binned); });
-
-DECLARE_SOA_COLUMN(GlobalIndex, globalIndex, int64_t); // Index to the collision
-DECLARE_SOA_COLUMN(Mult, mult, int);                   // Multiplicity of the collision
-DECLARE_SOA_COLUMN(PosZ, posZ, int);                   // Vertex of the collision
-
 } // namespace singletrackselector
 
 DECLARE_SOA_TABLE(SingleTrackSel, "AOD", "STSEL", // Table of the variables for single track selection.
                   o2::soa::Index<>,
-                  singletrackselector::CollisionId,
+                  singletrackselector::SingleCollSelId,
                   singletrackselector::HasITS,
                   singletrackselector::HasTOF,
                   singletrackselector::Px,
@@ -241,16 +238,11 @@ DECLARE_SOA_TABLE(SingleTrackSel, "AOD", "STSEL", // Table of the variables for 
                                                  singletrackselector::ITSNCls,
                                                  singletrackselector::TPCCrossedRowsOverFindableCls,
                                                  singletrackselector::StoredCrossedRows>,
-                  singletrackselector::PIDCuts<singletrackselector::Px, singletrackselector::Py, singletrackselector::Sign,
+                  singletrackselector::PIDCuts<singletrackselector::Sign, singletrackselector::Px, singletrackselector::Py, singletrackselector::Pz,
                                                singletrackselector::StoredTPCNSigmaPr,
                                                singletrackselector::StoredTOFNSigmaPr,
                                                singletrackselector::StoredTPCNSigmaDe,
                                                singletrackselector::StoredTOFNSigmaDe>);
-
-DECLARE_SOA_TABLE(SingleCollSel, "AOD", "SCSEL", // Table of the variables for single track selection.
-                  
-                  singletrackselector::GlobalIndex,
-                  singletrackselector::Mult,
-                  singletrackselector::PosZ);
 } // namespace o2::aod
+
 #endif // PWGCF_DATAMODEL_SINGLETRACKSELECTOR_H_
