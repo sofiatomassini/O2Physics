@@ -37,7 +37,8 @@ struct singleTrackSelector {
 
   Configurable<int> applyEvSel{"applyEvSel", 2, "Flag to apply rapidity cut: 0 -> no event selection, 1 -> Run 2 event selection, 2 -> Run 3 event selection"};
   Configurable<float> cutDcaXy{"cutDcaXy", 0.12, ""};
-  Configurable<float> cutPtMin{"cutPtMin", 0.4, "Minimum cut in pT"};
+  Configurable<float> cutPtMin{"cutPtMin", 0.5, "Minimum cut in pT"};
+  Configurable<float> cutPtMax{"cutPtMax", 5., "Minimum cut in pT"};
   Configurable<float> cutTPCNSigmaPr{"cutTPCNSigmaPr", 5.f, "Cut on the TPC nsigma for protons"};
   Configurable<float> cutTPCNSigmaDe{"cutTPCNSigmaDe", 5.f, "Cut on the TPC nsigma for deuteron"};
 
@@ -49,7 +50,7 @@ struct singleTrackSelector {
   using Coll = soa::Join<aod::Collisions, aod::Mults, aod::EvSels, aod::FT0sCorrected>;
 
   Produces<o2::aod::SingleTrackSel> tableRow;
-  Produces<o2::aod::SingleCollSel> tableRowColl;
+  Produces<o2::aod::SingleCollSels> tableRowColl;
 
   Filter eventFilter = (applyEvSel.node() == 0) ||
                        ((applyEvSel.node() == 1) && (aod::evsel::sel7 == true)) ||
@@ -60,12 +61,11 @@ struct singleTrackSelector {
   void process(soa::Filtered<Coll>::iterator const& collision, soa::Filtered<Trks> const& tracks)
   {
     tableRow.reserve(tracks.size());
-    tableRowColl(collision.globalIndex(),
-                 collision.multTPC(),
+    tableRowColl(collision.multTPC(),
                  collision.posZ());
 
     for (auto& track : tracks) {
-      if (track.pt() < cutPtMin) {
+      if (track.pt() < cutPtMin || track.pt() > cutPtMax) {
         continue;
       }
       if (abs(track.dcaXY()) > cutDcaXy) {
