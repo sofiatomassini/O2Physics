@@ -62,7 +62,7 @@ struct FemtoCorrelations {
   Configurable<float> dcaXY{"dcaXY", 10.0, ""};
   Configurable<float> dcaZ{"dcaZ", 10.0, ""};
   Configurable<int> itsNCls{"itsNCls", -1, ""};
-  Configurable<int> VertexZ{"VertexZ", 10.0, ""};
+  Configurable<float> VertexZ{"VertexZ", 10.0, ""};
 
   Configurable<int> sign_1{"sign_1", 1, ""};
   Configurable<int> particlePDG_1{"particlePDG_1", 2212, ""};
@@ -115,7 +115,7 @@ struct FemtoCorrelations {
   }
 
   
-  void process(aod::SingleCollSel const& collisions, aod::SingleTrackSel const& tracks)
+  void process(aod::SingleCollSels const& collisions, aod::SingleTrackSel const& tracks)
   {
 
     std::map<int, std::vector<FemtoParticle*>> selectedtracks_1;
@@ -131,7 +131,7 @@ struct FemtoCorrelations {
           FemtoParticle* Particle1 = new FemtoParticle( track.energy(particle_mass(PIDcuts_1["particlePDG"])), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
           Particle1->SetSign(PIDcuts_1["sign"]);
           Particle1->SetMagField(0.5);
-          selectedtracks_1[track.collisionId()].push_back(Particle1);
+          selectedtracks_1[track.singleCollSelId()].push_back(Particle1);
         }
 
         if(!IsIdentical && track.pidCuts(&PIDcuts_2)){
@@ -139,19 +139,19 @@ struct FemtoCorrelations {
           FemtoParticle* Particle2 = new FemtoParticle( track.energy(particle_mass(PIDcuts_2["particlePDG"])), track.px(), track.py(), track.pz(), track.eta(), track.phi() );
           Particle2->SetSign(PIDcuts_2["sign"]);
           Particle2->SetMagField(0.5);
-          selectedtracks_2[track.collisionId()].push_back(Particle2);
+          selectedtracks_2[track.singleCollSelId()].push_back(Particle2);
         }
       }
     }
 
     for (auto& collision : collisions) {
       if(abs(collision.posZ()) > VertexZ) continue;
-      if(selectedtracks_1.find(collision.globalIndex()) == selectedtracks_1.end()){
+      if(selectedtracks_1.find(collision.index()) == selectedtracks_1.end()){
         if(IsIdentical) continue;
-        else if(selectedtracks_2.find(collision.globalIndex()) == selectedtracks_2.end()) continue;
+        else if(selectedtracks_2.find(collision.index()) == selectedtracks_2.end()) continue;
       }
 
-      multbins[std::pair<int, int>{round(collision.posZ()/vertexbinwidth), floor(collision.mult()/multbinwidth)}].push_back(collision.globalIndex());
+      multbins[std::pair<int, int>{round(collision.posZ()/vertexbinwidth), floor(collision.mult()/multbinwidth)}].push_back(collision.index());
     }
 
     //============================================================================
