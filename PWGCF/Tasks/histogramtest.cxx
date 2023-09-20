@@ -106,7 +106,7 @@ struct QAHistograms {
     registry.add("ITSClusters", "Number of ITS Clusters; Number of ITS Clusters; counts", kTH1F, {{10, -0.5, 9.5}});
     registry.add("ITSchi2", "ITS chi2; ITS #chi^{2}; counts", kTH1F, {{100, 0.0, 40.}});
     registry.add("TPCchi2", "TPC chi2; TPC #chi^{2} counts;", kTH1F, {{100, 0.0, 6.}});
-    registry.add("collisionId", "Collisions; collision index; counts", kTH1F, {{1000, 0., 12000}});
+    //registry.add("collisionId", "Collisions; collision index; counts", kTH1F, {{1000, 0., 12000}});
     if (PIDcuts["particlePDG"] == 2212) {
       registry.add("nsigmaTOFPr", "Proton n_{#sigma} TOF", kTH2F, {{100, 0., 5., "#it{p} (GeV/#it{c})"}, {100, -10., 10., "n^{TOF}_{#sigma, p}"}});
       registry.add("nsigmaTPCPr", "Proton n_{#sigma} TPC", kTH2F, {{100, 0., 5., "#it{p} (GeV/#it{c})"}, {100, -10., 10., "n^{TPC}_{#sigma, p}"}});
@@ -118,11 +118,11 @@ struct QAHistograms {
       registry.add("nsigmaTPCTOF", "Deuteron n_{#sigma} TPC vs n_{#sigma} TOF", kTH3F, {{100, 0., 5., "#it{p} (GeV/#it{c})"}, {100, -10., 10., "n^{TPC}_{#sigma, d}"}, {100, -10., 10., "n^{TOF}_{#sigma, d}"}});
     }
     // if(singletrackselector::HasTOF)
-      registry.add("events", "vertex position along z; v_z (cm); counts", kTH1F, {{20, -20., 20.}});
+    registry.add("events", "vertex position along z; v_z (cm); counts", kTH1F, {{20, -20., 20.}});
 
   }
 
-  void process(aod::SingleCollSel const& collisions, aod::SingleTrackSel const& tracks)
+  void process(aod::SingleCollSels const& collisions, aod::SingleTrackSel const& tracks)
   {
 
     for (auto& track : tracks) {
@@ -131,6 +131,7 @@ struct QAHistograms {
       if (!track.trackCuts(&trackcuts) || !track.pidCuts(&PIDcuts))
         continue;
       else {
+
         registry.fill(HIST("eta"), track.eta());
         registry.fill(HIST("phi"), track.phi());
         registry.fill(HIST("etaphi"), track.eta(), track.phi());
@@ -153,7 +154,7 @@ struct QAHistograms {
         registry.fill(HIST("ITSchi2"), track.itsChi2NCl());
         registry.fill(HIST("TPCchi2"), track.tpcChi2NCl());
         registry.fill(HIST("crossed_rows"), track.tpcNClsCrossedRows());
-        registry.fill(HIST("collisionId"), track.collisionId());
+        // registry.fill(HIST("collisionId"), track.collisionId());
         if (PIDcuts["particlePDG"] == 2212) {
           registry.fill(HIST("nsigmaTOFPr"), track.p(), track.tofNSigmaPr());
           registry.fill(HIST("nsigmaTPCPr"), track.p(), track.tpcNSigmaPr());
@@ -166,6 +167,7 @@ struct QAHistograms {
         }
       }
     }
+
     for (auto& collision : collisions) {
       registry.fill(HIST("events"), collision.posZ());
     }
