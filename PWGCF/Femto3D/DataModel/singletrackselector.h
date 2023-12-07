@@ -66,7 +66,7 @@ struct binning {
 } // namespace nsigma
 
 DECLARE_SOA_COLUMN(Mult, mult, int);           // Multiplicity of the collision
-DECLARE_SOA_COLUMN(MultPercentile, multPerc, float);   // Percentiles of multiplicity of the collision
+DECLARE_SOA_COLUMN(MultPercentile, multPerc, float); // Percentiles of multiplicity of the collision
 DECLARE_SOA_COLUMN(PosZ, posZ, float);         // Vertex of the collision
 DECLARE_SOA_COLUMN(MagField, magField, float); // Magnetic field corresponding to a collision (in T)
 
